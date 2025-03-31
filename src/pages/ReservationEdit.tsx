@@ -1,8 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import type { ReactElement } from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import getReservationInfo from '../api/getReservationInfo'
+import getTables from '../api/getTables'
 import updateReservationInfo from '../api/updateReservationInfo'
 
 interface FormData {
@@ -29,6 +30,21 @@ export default function ReservationEditPage(): ReactElement {
 		enabled: !!id
 	})
 
+	const { data: tablesData } = useQuery({
+		queryKey: ['tables'],
+		queryFn: getTables
+	})
+
+	const maxSeats = useMemo(() => {
+		if (!tablesData?.tables) return 0
+		return Math.max(...tablesData.tables.map(table => table.seats))
+	}, [tablesData])
+
+	const availableSeats = useMemo(() => {
+		if (!tablesData?.tables) return []
+		return Array.from({ length: maxSeats - 1 }, (_, index) => index + 2)
+	}, [maxSeats])
+
 	const updateMutation = useMutation({
 		mutationFn: updateReservationInfo,
 		onSuccess: () => {
@@ -45,7 +61,7 @@ export default function ReservationEditPage(): ReactElement {
 				name: reservation.contact.name,
 				phone: reservation.contact.phone,
 				date: reservation.date,
-				numberOfPeople: reservation.numberOfPeople
+				numberOfPeople: Number(reservation.numberOfPeople)
 			})
 		}
 	}, [reservation])
@@ -56,7 +72,8 @@ export default function ReservationEditPage(): ReactElement {
 		setError('')
 		updateMutation.mutate({
 			id,
-			...formData
+			...formData,
+			numberOfPeople: Number(formData.numberOfPeople)
 		})
 	}
 
@@ -158,22 +175,22 @@ export default function ReservationEditPage(): ReactElement {
 								<select
 									id='numberOfPeople'
 									required
-									className='focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none'
+									className='mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
 									value={formData.numberOfPeople}
-									onChange={event =>
-										setFormData({
-											...formData,
-											numberOfPeople: Number(event.target.value)
+									onChange={event_ =>
+										handleChange({
+											target: {
+												name: 'numberOfPeople',
+												value: Number(event_.target.value)
+											}
 										})
 									}
 								>
-									{Array.from({ length: 9 }, (_, index) => index + 2).map(
-										number_ => (
-											<option key={number_} value={number_}>
-												{number_}人
-											</option>
-										)
-									)}
+									{availableSeats.map(seats => (
+										<option key={seats} value={seats}>
+											{seats}人
+										</option>
+									))}
 								</select>
 							</div>
 						</div>

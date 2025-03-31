@@ -1,7 +1,9 @@
+import { useQuery } from '@tanstack/react-query'
 import type { ReactElement } from 'react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import addReservation from '../api/addReservation'
+import getTables from '../api/getTables'
 
 interface ReservationData {
 	name: string
@@ -83,6 +85,18 @@ export default function TableReservation(): ReactElement {
 	const navigate = useNavigate()
 	const [showConfirm, setShowConfirm] = useState(false)
 	const [isSubmitting, setIsSubmitting] = useState(false)
+
+	// 添加获取餐桌数据的查询
+	const { data: tablesData } = useQuery({
+		queryKey: ['tables'],
+		queryFn: getTables
+	})
+
+	// 从餐桌数据中获取最大座位数
+	const maxSeats = useMemo(() => {
+		if (!tablesData?.tables) return 0
+		return Math.max(...tablesData.tables.map(table => table.seats))
+	}, [tablesData])
 
 	// 获取明天的日期作为最小可选日期
 	const tomorrow = new Date()
@@ -187,13 +201,14 @@ export default function TableReservation(): ReactElement {
 								})
 							}
 						>
-							{Array.from({ length: 9 }, (_, index) => index + 2).map(
-								number_ => (
-									<option key={number_} value={number_}>
-										{number_}人
-									</option>
-								)
-							)}
+							{Array.from(
+								{ length: maxSeats - 1 },
+								(_, index) => index + 2
+							).map(number_ => (
+								<option key={number_} value={number_}>
+									{number_}人
+								</option>
+							))}
 						</select>
 					</div>
 

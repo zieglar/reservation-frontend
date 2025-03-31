@@ -1,9 +1,10 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ReactElement } from 'react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import getReservations, { ReservationStatus } from '../api/getReservations'
 import getReservationsByMe from '../api/getReservationsByMe'
+import getTables from '../api/getTables'
 import updateReservationInfo from '../api/updateReservationInfo'
 import type { AuthInfo } from './Default'
 
@@ -52,6 +53,16 @@ export default function ReservationList(): ReactElement {
 		},
 		staleTime: STALE_TIME
 	})
+
+	const { data: tablesData } = useQuery({
+		queryKey: ['tables'],
+		queryFn: getTables
+	})
+
+	const availableSeats = useMemo(() => {
+		if (!tablesData?.tables) return []
+		return tablesData.tables.map(table => table.seats)
+	}, [tablesData])
 
 	const handleStatusUpdate = async (
 		id: string,
@@ -170,16 +181,16 @@ export default function ReservationList(): ReactElement {
 						</label>
 						<select
 							id='seats'
-							className='w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-black'
+							className='mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm'
 							value={filters.seats ?? ''}
 							onChange={event_ =>
 								handleFilterChange('seats', event_.target.value)
 							}
 						>
-							<option value=''>全部人数</option>
-							{SEATS_OPTIONS.map(number_ => (
-								<option key={number_} value={number_}>
-									{number_}人桌
+							<option value=''>全部</option>
+							{availableSeats.map(seats => (
+								<option key={seats} value={seats}>
+									{seats}人
 								</option>
 							))}
 						</select>
