@@ -9,6 +9,7 @@ const Login = lazy(async () => import('pages/Login'))
 const Register = lazy(async () => import('pages/Register'))
 const ReservationList = lazy(async () => import('pages/ReservationList'))
 const ReservationEdit = lazy(async () => import('pages/ReservationEdit'))
+const TableList = lazy(async () => import('pages/TableList'))
 
 export default function App(): ReactElement {
 	return (
@@ -21,6 +22,7 @@ export default function App(): ReactElement {
 					<Route path='/register' element={<Register />} />
 					<Route path='/reservations' element={<ReservationList />} />
 					<Route path='/reservations/:id/edit' element={<ReservationEdit />} />
+					<Route path='/tables' element={<TableList />} />
 				</Routes>
 			</Suspense>
 		</BrowserRouter>

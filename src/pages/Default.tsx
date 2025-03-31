@@ -58,6 +58,15 @@ export default function DefaultPage(): ReactElement {
 							>
 								查看预订信息
 							</button>
+							{authInfo.role === 'staff' && (
+								<button
+									type='button'
+									onClick={() => navigate('/tables')}
+									className='w-48 rounded-lg bg-blue-500 px-6 py-2 text-white transition-colors hover:bg-blue-600'
+								>
+									查看餐桌信息
+								</button>
+							)}
 							<button
 								type='button'
 								onClick={handleLogout}
